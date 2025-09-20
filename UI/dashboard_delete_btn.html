@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Subscription Tracker</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#137fec",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101922",
+          },
+          fontFamily: {
+            "display": ["Inter"],
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    };
+  </script>
+
+
+
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    }
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="flex flex-col min-h-screen">
+<header class="flex items-center justify-between p-4 border-b border-black/10 dark:border-white/10">
+<span class="material-symbols-outlined text-gray-500 dark:text-gray-400">menu</span>
+<h1 class="text-lg font-bold text-gray-900 dark:text-white">Subscriptions</h1>
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-gray-500 dark:text-gray-400">dark_mode</span>
+<div class="relative w-12 h-6 rounded-full bg-gray-300 dark:bg-gray-700">
+<div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform transform translate-x-6 dark:translate-x-0"></div>
+</div>
+<span class="material-symbols-outlined text-gray-500 dark:text-gray-400">light_mode</span>
+</div>
+</header>
+<main class="flex-grow p-4 space-y-6 flex flex-col">
+<section class="grid grid-cols-3 gap-2">
+  <div class="flex flex-col items-center p-3 rounded-lg bg-white/5 dark:bg-black/10">
+    <span class="text-sm text-gray-500 dark:text-gray-400">Daily</span>
+    <span class="text-xl font-bold text-gray-900 dark:text-white" id="dailyTotal">₹0.00</span>
+  </div>
+  <div class="flex flex-col items-center p-3 rounded-lg bg-white/5 dark:bg-black/10">
+    <span class="text-sm text-gray-500 dark:text-gray-400">Monthly</span>
+    <span class="text-xl font-bold text-gray-900 dark:text-white" id="monthlyTotal">₹0.00</span>
+  </div>
+  <div class="flex flex-col items-center p-3 rounded-lg bg-white/5 dark:bg-black/10">
+    <span class="text-sm text-gray-500 dark:text-gray-400">Yearly</span>
+    <span class="text-xl font-bold text-gray-900 dark:text-white" id="yearlyTotal">₹0.00</span>
+  </div>
+</section>
+<div class="flex justify-center mb-4">
+<div class="relative inline-block text-left">
+<div>
+<button aria-expanded="true" aria-haspopup="true" class="inline-flex justify-center w-full rounded-md border border-gray-300 dark:border-gray-700 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-primary" id="menu-button" type="button">
+              Order By
+              <span class="material-symbols-outlined -mr-1 ml-2 h-5 w-5">
+                expand_more
+              </span>
+</button>
+</div>
+<div aria-labelledby="menu-button" aria-orientation="vertical" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" tabindex="-1">
+<div class="py-1" role="none">
+<a class="text-gray-700 dark:text-gray-300 block px-4 py-2 text-sm" href="#" id="menu-item-0" role="menuitem" tabindex="-1">Cost</a>
+<a class="text-gray-700 dark:text-gray-300 block px-4 py-2 text-sm" href="#" id="menu-item-1" role="menuitem" tabindex="-1">Next Renewal Date</a>
+</div>
+</div>
+</div>
+</div>
+<section id="subscriptionsList" class="flex-grow overflow-y-auto space-y-2">
+  <!-- Subscriptions will be rendered here -->
+</section>
+</main>
+<footer class="sticky bottom-0 p-4 bg-background-light dark:bg-background-dark">
+  <button id="addBtn" class="w-full flex items-center justify-center h-14 bg-primary text-white font-bold rounded-xl shadow-lg">
+    <span class="material-symbols-outlined text-3xl">add</span>
+  </button>
+</footer>
+</div>
+
+<!-- Add Subscription Modal (now inline, no iframe) -->
+<div id="addModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 transition-opacity duration-200 hidden">
+  <div class="w-full max-w-xl md:max-w-3xl rounded-2xl bg-[#181d22] p-0 md:p-8 pb-0 md:pb-8 relative shadow-2xl mx-2 md:mx-4 flex flex-col max-h-[90vh]">
+    <!-- Drag indicator -->
+    <div class="flex justify-center mb-4 pt-4 md:pt-0">
+      <div class="w-16 h-1.5 bg-[#26303a] rounded-full"></div>
+    </div>
+    <button onclick="closeAddModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white z-10" aria-label="Close Add Modal">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <div class="flex-1 overflow-y-auto rounded-b-2xl p-6">
+      <!-- Begin Add Subscription Form -->
+      <form id="addSubscriptionForm" class="space-y-6">
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-200 mb-1">Subscription Name</label>
+          <input type="text" id="name" name="name" required class="w-full rounded-lg border border-gray-600 bg-[#22272e] text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. Netflix">
+        </div>
+        <div>
+          <label for="cost" class="block text-sm font-medium text-gray-200 mb-1">Cost</label>
+          <input type="number" id="cost" name="cost" required min="0" step="0.01" class="w-full rounded-lg border border-gray-600 bg-[#22272e] text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. 15.00">
+        </div>
+        <div>
+          <label for="renewal" class="block text-sm font-medium text-gray-200 mb-1">Next Renewal Date</label>
+          <input type="date" id="renewal" name="renewal" required class="w-full rounded-lg border border-gray-600 bg-[#22272e] text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="flex flex-col gap-1">
+    <label class="text-sm font-medium text-gray-200 mb-1" for="frequency">Renewal Frequency</label>
+    <select
+      class="form-select h-12 w-full appearance-none rounded-lg border border-gray-600 bg-white/80 dark:bg-[#232b36] text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+      id="frequency"
+      name="frequency"
+      required
+    >
+      <option>Daily</option>
+      <option selected>Monthly</option>
+      <option>Yearly</option>
+    </select>
+  </div>
+        <div class="flex justify-end gap-2 pt-4">
+          <button type="button" onclick="closeAddModal()" class="rounded-lg border border-gray-600 px-4 py-2 text-gray-200 hover:bg-gray-700">Cancel</button>
+          <button type="submit" class="rounded-lg bg-primary px-6 py-2 text-white font-bold hover:bg-blue-700">Add Subscription</button>
+        </div>
+      </form>
+      <!-- End Add Subscription Form -->
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal (remains as is, but add id for toggling) -->
+<div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 hidden">
+  <div class="w-full max-w-sm rounded-xl bg-background-light dark:bg-gray-800 shadow-xl p-6 text-center">
+    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+      <span class="material-symbols-outlined text-red-600 dark:text-red-400 !text-3xl">
+        delete_forever
+      </span>
+    </div>
+    <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Delete Subscription?</h3>
+    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Are you sure you want to delete the 'Music Streaming' subscription? This action cannot be undone.</p>
+    <div class="mt-6 flex justify-center gap-4">
+      <button onclick="closeDeleteModal()" class="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+      <button class="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-700">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container (top right, auto-disappear, with close button) -->
+<div id="toast" class="fixed top-6 right-6 z-50 min-w-[200px] max-w-xs px-4 py-3 rounded-lg shadow-lg text-white text-center text-sm font-medium opacity-0 pointer-events-none transition-all duration-300 flex items-center justify-between gap-2"></div>
+
+<script>
+  // Toast utility (auto-disappear, top right, with close button)
+  let toastTimeout;
+  function showToast(message, type = "success") {
+  const toast = document.getElementById('toast');
+  toast.innerHTML = `
+    <span class="flex-1 text-left">${message}</span>
+    <button id="toastCloseBtn" class="ml-2 text-white/80 hover:text-white focus:outline-none">
+      <span class="material-symbols-outlined" style="font-size:1.2em;">close</span>
+    </button>
+  `;
+  toast.className =
+    "fixed top-6 right-6 z-50 min-w-[200px] max-w-xs px-4 py-3 rounded-lg shadow-lg text-white text-center text-sm font-medium opacity-100 pointer-events-auto transition-all duration-300 flex items-center justify-between gap-2 " +
+    (type === "success" ? "bg-green-600" : "bg-red-600");
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove("opacity-100", "pointer-events-auto");
+    toast.classList.add("opacity-0");
+    // Optionally clear after transition
+    setTimeout(() => {
+      toast.innerHTML = "";
+      toast.className =
+        "fixed top-6 right-6 z-50 min-w-[200px] max-w-xs px-4 py-3 rounded-lg shadow-lg text-white text-center text-sm font-medium opacity-0 pointer-events-none transition-all duration-300 flex items-center justify-between gap-2";
+    }, 300);
+  }, 3000);
+  document.getElementById('toastCloseBtn').onclick = function() {
+    clearTimeout(toastTimeout);
+    toast.classList.remove("opacity-100", "pointer-events-auto");
+    toast.classList.add("opacity-0");
+    setTimeout(() => {
+      toast.innerHTML = "";
+      toast.className =
+        "fixed top-6 right-6 z-50 min-w-[200px] max-w-xs px-4 py-3 rounded-lg shadow-lg text-white text-center text-sm font-medium opacity-0 pointer-events-none transition-all duration-300 flex items-center justify-between gap-2";
+    }, 300);
+  };
+  }
+
+  // Subscription data (will be fetched from backend later)
+  let subscriptions = [
+    { name: "Music Streaming", cost: "10.00", renewal: "2024-08-15", category: "music_note", type: "upcoming", frequency: "Monthly" },
+    { name: "Video Streaming", cost: "15.00", renewal: "2024-08-22", category: "movie", type: "upcoming", frequency: "Monthly" },
+    { name: "News", cost: "5.00", renewal: "2024-07-01", category: "newspaper", type: "due", frequency: "Monthly" },
+    { name: "Cloud Storage", cost: "5.00", renewal: "2024-09-10", category: "cloud", type: "upcoming", frequency: "Yearly" },
+    { name: "Productivity Suite", cost: "10.00", renewal: "2024-09-15", category: "description", type: "upcoming", frequency: "Monthly" },
+    { name: "Gaming Service", cost: "12.00", renewal: "2024-08-25", category: "sports_esports", type: "upcoming", frequency: "Yearly" },
+    { name: "Gym Membership", cost: "40.00", renewal: "2024-06-30", category: "fitness_center", type: "due", frequency: "Monthly" },
+    { name: "Coffee Subscription", cost: "2.00", renewal: "2024-09-21", category: "local_cafe", type: "upcoming", frequency: "Daily" },
+    { name: "Daily News Digest", cost: "1.00", renewal: "2024-09-21", category: "feed", type: "upcoming", frequency: "Daily" },
+    { name: "Domain Renewal", cost: "20.00", renewal: "2025-01-01", category: "language", type: "upcoming", frequency: "Yearly" }
+  ];
+
+  // Mock backend fetch for totals
+  async function fetchTotalsFromBackend() {
+    await new Promise(res => setTimeout(res, 400));
+    let daily = 0, monthly = 0, yearly = 0;
+    subscriptions.forEach(sub => {
+      const cost = parseFloat(sub.cost);
+      if (sub.frequency === "Daily") daily += cost;
+      else if (sub.frequency === "Monthly") monthly += cost;
+      else if (sub.frequency === "Yearly") yearly += cost;
+    });
+    return { daily, monthly, yearly };
+  }
+
+  // Category list for selector
+  const CATEGORIES = [
+    { name: "Music", value: "music_note" },
+    { name: "Video", value: "movie" },
+    { name: "News", value: "newspaper" },
+    { name: "Cloud", value: "cloud" },
+    { name: "Productivity", value: "description" },
+    { name: "Gaming", value: "sports_esports" },
+    { name: "Fitness", value: "fitness_center" },
+    { name: "Coffee", value: "local_cafe" },
+    { name: "Feed", value: "feed" },
+    { name: "Domain", value: "language" },
+    { name: "Other", value: "subscriptions" }
+  ];
+
+  // Render subscriptions with frequency & renewal as labels
+  function renderSubscriptions() {
+    const list = document.getElementById('subscriptionsList');
+    list.innerHTML = '';
+    subscriptions.forEach((sub, idx) => {
+      const renewalClass = sub.type === "due" ? "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300" : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+      const freqClass = "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
+      list.innerHTML += `
+        <div class="subscription-row flex items-center gap-4 p-3 rounded-lg bg-white/5 dark:bg-black/10 transition-all duration-200 group">
+          <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
+            <span class="material-symbols-outlined text-primary">${sub.category}</span>
+          </div>
+          <div class="flex-grow">
+            <p class="font-semibold text-gray-900 dark:text-white">${sub.name}</p>
+            <div class="flex gap-2 mt-1">
+              <span class="px-2 py-0.5 rounded text-xs font-medium ${freqClass} capitalize">${sub.frequency}</span>
+              <span class="px-2 py-0.5 rounded text-xs font-medium ${renewalClass}">Renewal: ${sub.renewal}</span>
+            </div>
+          </div>
+          <p class="font-semibold text-gray-900 dark:text-white">₹${sub.cost}</p>
+          <button class="ml-2 p-2 text-red-500 dark:text-red-400 hover:bg-red-500/10 rounded-full" onclick="showDeleteModal(${idx})">
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+        </div>
+      `;
+    });
+    updateTotals();
+  }
+
+  // Update totals (fetch from backend)
+  async function updateTotals() {
+    const { daily, monthly, yearly } = await fetchTotalsFromBackend();
+    document.getElementById('dailyTotal').textContent = `₹${daily.toFixed(2)}`;
+    document.getElementById('monthlyTotal').textContent = `₹${monthly.toFixed(2)}`;
+    document.getElementById('yearlyTotal').textContent = `₹${yearly.toFixed(2)}`;
+  }
+
+  // Populate category selector in add modal
+  function populateCategorySelector() {
+    const catSelect = document.getElementById('category');
+    catSelect.innerHTML = CATEGORIES.map(cat =>
+      `<option value="${cat.value}">${cat.name}</option>`
+    ).join('');
+  }
+
+  // Add Subscription Modal logic
+  const addBtn = document.getElementById('addBtn');
+  const addModal = document.getElementById('addModal');
+  addBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    addModal.classList.remove('hidden');
+    populateCategorySelector();
+  });
+  function closeAddModal() {
+    addModal.classList.add('hidden');
+    document.getElementById('addSubscriptionForm').reset();
+    document.getElementById('addStatus')?.remove();
+  }
+
+  // Add Subscription form submit
+  document.getElementById('addSubscriptionForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const newSub = {
+      name: form.name.value,
+      cost: form.cost.value,
+      renewal: form.renewal.value,
+      frequency: form.frequency.value,
+      category: form.category.value,
+      type: "upcoming"
+    };
+    // Mock server call
+    let status = document.getElementById('addStatus');
+    if (!status) {
+      status = document.createElement('div');
+      status.id = 'addStatus';
+      status.className = 'mt-2 text-sm';
+      form.appendChild(status);
+    }
+    status.textContent = "Adding...";
+    await new Promise(res => setTimeout(res, 800));
+    subscriptions.push(newSub);
+    renderSubscriptions();
+    status.textContent = "Subscription added!";
+    showToast("Subscription added!", "success");
+    setTimeout(closeAddModal, 1000);
+  };
+
+  // Delete Modal logic
+  const deleteModal = document.getElementById('deleteModal');
+  let deleteIdx = null;
+  function showDeleteModal(idx) {
+    deleteIdx = idx;
+    deleteModal.querySelector('p.mt-2').textContent =
+      `Are you sure you want to delete the '${subscriptions[idx].name}' subscription? This action cannot be undone.`;
+    deleteModal.classList.remove('hidden');
+    if (!deleteModal.querySelector('#deleteStatus')) {
+      const status = document.createElement('div');
+      status.id = 'deleteStatus';
+      status.className = 'mt-2 text-sm';
+      deleteModal.querySelector('.flex.justify-center.gap-4').after(status);
+    } else {
+      deleteModal.querySelector('#deleteStatus').textContent = '';
+    }
+  }
+  function closeDeleteModal() {
+    deleteModal.classList.add('hidden');
+    if (deleteModal.querySelector('#deleteStatus')) {
+      deleteModal.querySelector('#deleteStatus').textContent = '';
+    }
+  }
+  // Confirm delete
+  deleteModal.querySelector('.bg-red-600').onclick = async function() {
+    const status = deleteModal.querySelector('#deleteStatus');
+    status.textContent = "Deleting...";
+    await new Promise(res => setTimeout(res, 800));
+    if (deleteIdx !== null) {
+      subscriptions.splice(deleteIdx, 1);
+      renderSubscriptions();
+      status.textContent = "Subscription deleted!";
+      showToast("Subscription deleted!", "success");
+      setTimeout(closeDeleteModal, 800);
+    }
+  };
+
+  // Initial render
+  renderSubscriptions();
+</script>
+
+<!-- Add category selector to the add subscription form at the top -->
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('addSubscriptionForm');
+    if (!document.getElementById('category')) {
+      const catDiv = document.createElement('div');
+      catDiv.innerHTML = `
+        <label for="category" class="block text-sm font-medium text-gray-200 mb-1">Category</label>
+        <select id="category" name="category" required class="form-select h-12 w-full appearance-none rounded-lg border border-gray-600 bg-white/80 dark:bg-[#232b36] text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"></select>
+      `;
+      form.insertBefore(catDiv, form.firstChild);
+    }
+  });
+</script>
+
+<style>
+  /* Fix date picker color for dark mode */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+  input[type="date"] {
+    color-scheme: dark;
+    background-color: #22272e;
+    color: #fff;
+  }
+  /* Subscription list container width for large screens */
+  #subscriptionsList {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+  @media (max-width: 768px) {
+    #subscriptionsList {
+      max-width: 100%;
+    }
+  }
+  /* Hover effect for subscription row */
+  .subscription-row {
+    box-shadow: none;
+    cursor: pointer;
+  }
+  .subscription-row:hover {
+    background: #eaf3ff;
+    box-shadow: 0 6px 24px 0 rgba(19,127,236,0.10), 0 1.5px 4px 0 rgba(19,127,236,0.10);
+    transform: translateY(-2px) scale(1.01);
+    z-index: 2;
+  }
+  .dark .subscription-row:hover {
+    background: #1a2633;
+  }
+  /* Add button style */
+  #addBtn {
+    width: auto;
+    min-width: 220px;
+    max-width: 100%;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1rem;
+    height: 3rem;
+  }
+  #addBtn span {
+    font-size: 1.7rem;
+    margin-right: 0.5rem;
+  }
+  /* Make only the list scrollable, not the whole page */
+  main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+  }
+  #subscriptionsList {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 60vh;
+    min-height: 200px;
+    padding-bottom: 1rem;
+  }
+  @media (max-width: 768px) {
+    #subscriptionsList {
+      max-width: 100%;
+      max-height: 50vh;
+    }
+  }
+  /* Remove horizontal scrollbar */
+  #subscriptionsList::-webkit-scrollbar {
+  width: 8px;
+  background: #f6f7f8; /* light mode background */
+}
+#subscriptionsList::-webkit-scrollbar-thumb {
+  background: #137fec; /* primary color */
+  border-radius: 8px;
+}
+.dark #subscriptionsList::-webkit-scrollbar {
+  background: #101922;
+}
+.dark #subscriptionsList::-webkit-scrollbar-thumb {
+  background: #137fec;
+}
+#subscriptionsList {
+  scrollbar-width: thin;
+  scrollbar-color: #137fec #f6f7f8;
+}
+.dark #subscriptionsList {
+  scrollbar-color: #137fec #101922;
+}
+</style>
+
+<!-- Update Add Button HTML -->
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const addBtn = document.getElementById('addBtn');
+    addBtn.innerHTML = `<span class="material-symbols-outlined">add</span>Add Subscription`;
+  });
+</script>
+
+<!-- Add rupee sign to cost input in add modal -->
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const costInput = document.getElementById('cost');
+    if (costInput && !document.getElementById('rupee-prefix')) {
+      const wrapper = document.createElement('div');
+      wrapper.className = "relative";
+      costInput.parentNode.insertBefore(wrapper, costInput);
+      wrapper.appendChild(costInput);
+      const rupee = document.createElement('span');
+      rupee.id = "rupee-prefix";
+      rupee.textContent = "₹";
+      rupee.className = "absolute left-3 top-1/2 -translate-y-1/2 text-gray-400";
+      costInput.classList.add("pl-7");
+      wrapper.appendChild(rupee);
+    }
+  });
+</script>
+</body></html>
