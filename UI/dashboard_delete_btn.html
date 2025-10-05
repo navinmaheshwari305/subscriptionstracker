@@ -63,6 +63,7 @@
 <header class="flex items-center justify-between p-4 border-b border-black/10 dark:border-white/10">
 <span class="material-symbols-outlined text-gray-500 dark:text-gray-400">menu</span>
 <h1 class="text-lg font-bold text-gray-900 dark:text-white">Subscriptions</h1>
+<div class="flex items-center space-x-4">
 <div class="flex items-center space-x-2">
 <span class="material-symbols-outlined text-gray-500 dark:text-gray-400">dark_mode</span>
 <div class="relative w-12 h-6 rounded-full bg-gray-300 dark:bg-gray-700">
@@ -70,19 +71,21 @@
 </div>
 <span class="material-symbols-outlined text-gray-500 dark:text-gray-400">light_mode</span>
 </div>
+<button id="logoutBtn" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Logout"><span class="material-symbols-outlined text-gray-500 dark:text-gray-400">logout</span></button>
+</div>
 </header>
 <main class="flex-grow p-4 space-y-6 flex flex-col">
 <section class="grid grid-cols-3 gap-2">
   <div class="flex flex-col items-center p-3 rounded-lg bg-white/5 dark:bg-black/10">
-    <span class="text-sm text-gray-500 dark:text-gray-400">Daily</span>
+    <span class="text-sm text-gray-500 dark:text-gray-400">Expense Per Day</span>
     <span class="text-xl font-bold text-gray-900 dark:text-white" id="dailyTotal">₹0.00</span>
   </div>
   <div class="flex flex-col items-center p-3 rounded-lg bg-white/5 dark:bg-black/10">
-    <span class="text-sm text-gray-500 dark:text-gray-400">Monthly</span>
+    <span class="text-sm text-gray-500 dark:text-gray-400">Expense in Month</span>
     <span class="text-xl font-bold text-gray-900 dark:text-white" id="monthlyTotal">₹0.00</span>
   </div>
   <div class="flex flex-col items-center p-3 rounded-lg bg-white/5 dark:bg-black/10">
-    <span class="text-sm text-gray-500 dark:text-gray-400">Yearly</span>
+    <span class="text-sm text-gray-500 dark:text-gray-400">Expense in Year</span>
     <span class="text-xl font-bold text-gray-900 dark:text-white" id="yearlyTotal">₹0.00</span>
   </div>
 </section>
@@ -148,9 +151,11 @@
       name="frequency"
       required
     >
-      <option>Daily</option>
-      <option selected>Monthly</option>
-      <option>Yearly</option>
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly" selected>Monthly</option>
+      <option value="quarterly">Quarterly</option>
+      <option value="yearly">Yearly</option>
     </select>
   </div>
         <div class="flex justify-end gap-2 pt-4">
@@ -182,6 +187,16 @@
 
 <!-- Toast container (top right, auto-disappear, with close button) -->
 <div id="toast" class="fixed top-6 right-6 z-50 min-w-[200px] max-w-xs px-4 py-3 rounded-lg shadow-lg text-white text-center text-sm font-medium opacity-0 pointer-events-none transition-all duration-300 flex items-center justify-between gap-2"></div>
+
+<script>
+  // --- Authentication Check ---
+  // This should be the very first script to run.
+  const authToken = localStorage.getItem('authToken');
+  if (!authToken) {
+    // If no token, redirect to login page.
+    window.location.href = 'login.html';
+  }
+</script>
 
 <script>
   // Toast utility (auto-disappear, top right, with close button)
@@ -220,31 +235,61 @@
   };
   }
 
-  // Subscription data (will be fetched from backend later)
-  let subscriptions = [
-    { name: "Music Streaming", cost: "10.00", renewal: "2024-08-15", category: "music_note", type: "upcoming", frequency: "Monthly" },
-    { name: "Video Streaming", cost: "15.00", renewal: "2024-08-22", category: "movie", type: "upcoming", frequency: "Monthly" },
-    { name: "News", cost: "5.00", renewal: "2024-07-01", category: "newspaper", type: "due", frequency: "Monthly" },
-    { name: "Cloud Storage", cost: "5.00", renewal: "2024-09-10", category: "cloud", type: "upcoming", frequency: "Yearly" },
-    { name: "Productivity Suite", cost: "10.00", renewal: "2024-09-15", category: "description", type: "upcoming", frequency: "Monthly" },
-    { name: "Gaming Service", cost: "12.00", renewal: "2024-08-25", category: "sports_esports", type: "upcoming", frequency: "Yearly" },
-    { name: "Gym Membership", cost: "40.00", renewal: "2024-06-30", category: "fitness_center", type: "due", frequency: "Monthly" },
-    { name: "Coffee Subscription", cost: "2.00", renewal: "2024-09-21", category: "local_cafe", type: "upcoming", frequency: "Daily" },
-    { name: "Daily News Digest", cost: "1.00", renewal: "2024-09-21", category: "feed", type: "upcoming", frequency: "Daily" },
-    { name: "Domain Renewal", cost: "20.00", renewal: "2025-01-01", category: "language", type: "upcoming", frequency: "Yearly" }
-  ];
+  // --- Backend Integration ---
+  const API_BASE_URL = "http://localhost:3000";
+  // Use the token from localStorage.
+  const AUTH_TOKEN = localStorage.getItem('authToken');
 
-  // Mock backend fetch for totals
+  let subscriptions = []; // This will be populated from the backend.
+
+  // Fetches all subscriptions from the backend
+  async function fetchSubscriptions() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/subscriptions`, {
+        headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token is invalid or expired, clear it and redirect to login
+          localStorage.removeItem('authToken');
+          window.location.href = 'login.html';
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      // Map backend data to frontend format
+      subscriptions = data.subscriptions.map(mapSubscriptionToFrontend);
+      renderSubscriptions();
+    } catch (error) {
+      console.error("Failed to fetch subscriptions:", error);
+      showToast("Could not load subscriptions.", "error");
+    }
+  }
+
+  // Fetches totals from the backend API
   async function fetchTotalsFromBackend() {
-    await new Promise(res => setTimeout(res, 400));
-    let daily = 0, monthly = 0, yearly = 0;
-    subscriptions.forEach(sub => {
-      const cost = parseFloat(sub.cost);
-      if (sub.frequency === "Daily") daily += cost;
-      else if (sub.frequency === "Monthly") monthly += cost;
-      else if (sub.frequency === "Yearly") yearly += cost;
-    });
-    return { daily, monthly, yearly };
+    try {
+      const response = await fetch(`${API_BASE_URL}/subscriptions/expense`, {
+        headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('authToken');
+          window.location.href = 'login.html';
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return {
+        daily: data.day_expense || 0,
+        monthly: data.month_expense || 0,
+        yearly: data.year_expense || 0
+      };
+    } catch (error) {
+      console.error("Failed to fetch totals:", error);
+      showToast("Could not load expense totals.", "error");
+      return { daily: 0, monthly: 0, yearly: 0 }; // Return zeroed values on error
+    }
   }
 
   // Category list for selector
@@ -262,11 +307,32 @@
     { name: "Other", value: "subscriptions" }
   ];
 
+  // Helper to map backend subscription to frontend format
+  function mapSubscriptionToFrontend(sub) {
+    const renewalDate = new Date(sub.renewal_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize today's date
+
+    // The backend schema doesn't include frequency, so we'll default it.
+    // This might need adjustment based on your actual business logic.
+    const frequency = sub.frequency || "Monthly"; 
+
+    return {
+      id: sub.subscription_id,
+      name: sub.name,
+      cost: parseFloat(sub.cost).toFixed(2),
+      renewal: sub.renewal_date,
+      category: sub.category, // Assuming backend category matches frontend icon names
+      type: renewalDate < today ? "due" : "upcoming",
+      frequency: frequency,
+    };
+  }
+
   // Render subscriptions with frequency & renewal as labels
   function renderSubscriptions() {
     const list = document.getElementById('subscriptionsList');
     list.innerHTML = '';
-    subscriptions.forEach((sub, idx) => {
+    subscriptions.forEach((sub) => {
       const renewalClass = sub.type === "due" ? "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300" : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
       const freqClass = "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
       list.innerHTML += `
@@ -282,7 +348,7 @@
             </div>
           </div>
           <p class="font-semibold text-gray-900 dark:text-white">₹${sub.cost}</p>
-          <button class="ml-2 p-2 text-red-500 dark:text-red-400 hover:bg-red-500/10 rounded-full" onclick="showDeleteModal(${idx})">
+          <button class="ml-2 p-2 text-red-500 dark:text-red-400 hover:bg-red-500/10 rounded-full" onclick="showDeleteModal('${sub.id}')">
             <span class="material-symbols-outlined">delete</span>
           </button>
         </div>
@@ -325,29 +391,42 @@
   document.getElementById('addSubscriptionForm').onsubmit = async function(e) {
     e.preventDefault();
     const form = e.target;
-    const newSub = {
+    const newSubData = {
       name: form.name.value,
-      cost: form.cost.value,
-      renewal: form.renewal.value,
-      frequency: form.frequency.value,
+      cost: parseFloat(form.cost.value),
+      renewal_date: form.renewal.value,
       category: form.category.value,
-      type: "upcoming"
+      frequency: form.frequency.value,
     };
-    // Mock server call
+
     let status = document.getElementById('addStatus');
     if (!status) {
       status = document.createElement('div');
       status.id = 'addStatus';
       status.className = 'mt-2 text-sm';
       form.appendChild(status);
+    }    
+    status.textContent = "Adding...";    
+    try {
+      const response = await fetch(`${API_BASE_URL}/subscriptions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AUTH_TOKEN}`
+        },
+        body: JSON.stringify(newSubData)
+      });
+      if (!response.ok) {
+        throw new Error('Failed to add subscription');
+      }
+      status.textContent = "Subscription added!";
+      showToast("Subscription added!", "success");
+      fetchSubscriptions(); // Re-fetch the list from the server
+      setTimeout(closeAddModal, 1000);
+    } catch (error) {
+      status.textContent = "Error: " + error.message;
+      showToast("Failed to add subscription.", "error");
     }
-    status.textContent = "Adding...";
-    await new Promise(res => setTimeout(res, 800));
-    subscriptions.push(newSub);
-    renderSubscriptions();
-    status.textContent = "Subscription added!";
-    showToast("Subscription added!", "success");
-    setTimeout(closeAddModal, 1000);
   };
 
   // Delete Modal logic
@@ -355,8 +434,9 @@
   let deleteIdx = null;
   function showDeleteModal(idx) {
     deleteIdx = idx;
+    const subToDelete = subscriptions.find(s => s.id === idx);
     deleteModal.querySelector('p.mt-2').textContent =
-      `Are you sure you want to delete the '${subscriptions[idx].name}' subscription? This action cannot be undone.`;
+      `Are you sure you want to delete the '${subToDelete.name}' subscription? This action cannot be undone.`;
     deleteModal.classList.remove('hidden');
     if (!deleteModal.querySelector('#deleteStatus')) {
       const status = document.createElement('div');
@@ -377,18 +457,36 @@
   deleteModal.querySelector('.bg-red-600').onclick = async function() {
     const status = deleteModal.querySelector('#deleteStatus');
     status.textContent = "Deleting...";
-    await new Promise(res => setTimeout(res, 800));
-    if (deleteIdx !== null) {
-      subscriptions.splice(deleteIdx, 1);
-      renderSubscriptions();
+    try {
+      const response = await fetch(`${API_BASE_URL}/subscriptions/${deleteIdx}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete subscription');
+      }
       status.textContent = "Subscription deleted!";
       showToast("Subscription deleted!", "success");
+      fetchSubscriptions(); // Re-fetch the list from the server
       setTimeout(closeDeleteModal, 800);
+    } catch (error) {
+      status.textContent = "Error: " + error.message;
+      showToast("Failed to delete subscription.", "error");
     }
   };
 
   // Initial render
-  renderSubscriptions();
+  fetchSubscriptions();
+
+  // --- Logout Logic ---
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('authToken');
+      // Redirect to login page after logout
+      window.location.href = 'login.html';
+    });
+  }
 </script>
 
 <!-- Add category selector to the add subscription form at the top -->

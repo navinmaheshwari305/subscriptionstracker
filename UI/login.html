@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<title>Subscription Tracker Login</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#137fec",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101922",
+          },
+          fontFamily: {
+            "display": ["Inter"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white">
+<div class="flex flex-col justify-center items-center min-h-screen px-4">
+<div class="w-full max-w-sm">
+<div class="text-center mb-8">
+<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Welcome Back</h1>
+<p class="text-gray-500 dark:text-gray-400 mt-2">Log in to track your subscriptions</p>
+</div>
+<form class="space-y-6">
+<div id="error-message" class="hidden p-3 bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 rounded-lg text-sm"></div>
+<div>
+<label class="sr-only" for="email">Email</label>
+<input class="w-full h-12 px-4 bg-white/50 dark:bg-white/10 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-primary focus:border-primary text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400" id="email" name="email" placeholder="Email" type="email" required/>
+</div>
+<div>
+<label class="sr-only" for="password">Password</label>
+<input class="w-full h-12 px-4 bg-white/50 dark:bg-white/10 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-primary focus:border-primary text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400" id="password" name="password" placeholder="Password" type="password" required/>
+</div>
+<div>
+<button class="w-full h-12 px-6 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors duration-200" type="submit">
+            Login
+          </button>
+</div>
+</form>
+<div class="mt-6 text-center">
+<a class="text-sm text-primary hover:underline" href="signup.html">
+          Don't have an account? Sign up
+        </a>
+</div>
+</div>
+</div>
+
+<script>
+  const form = document.querySelector('form');
+  const errorMessageDiv = document.getElementById('error-message');
+  const API_BASE_URL = "http://localhost:3000";
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMessageDiv.classList.add('hidden');
+    errorMessageDiv.textContent = '';
+
+    const email = form.email.value;
+    const password = form.password.value;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials');
+      }
+
+      localStorage.setItem('authToken', data.token);
+      window.location.href = 'dashboard_delete_btn.html';
+    } catch (error) {
+      errorMessageDiv.textContent = error.message;
+      errorMessageDiv.classList.remove('hidden');
+    }
+  });
+</script>
+
+</body></html>
